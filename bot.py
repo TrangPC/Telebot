@@ -3,11 +3,20 @@ import requests
 import telegram
 from telegram import Update
 from telegram.ext import CallbackContext
+<<<<<<< HEAD
 
 # Config
 TOKEN = "7003110173:AAFaiT4IY0vIMBOPaAZWF4dCu9pk0HH4uZM"
 TELEGRAM_URL = "https://api.telegram.org/bot{token}".format(token=TOKEN)
 WEBHOOK_URL = "4e61-222-252-23-232.ngrok-free.app"
+=======
+from src.config import TOKEN, TELEGRAM_URL, WEBHOOK_URL
+
+# # Config
+# TOKEN = "7003110173:AAFaiT4IY0vIMBOPaAZWF4dCu9pk0HH4uZM"
+# TELEGRAM_URL = "https://api.telegram.org/bot{token}".format(token=TOKEN)
+# WEBHOOK_URL = "4e61-222-252-23-232.ngrok-free.app"
+>>>>>>> master
 
 LISTED_USERS = []
 bot = telegram.Bot(token=TOKEN)
@@ -22,7 +31,10 @@ def start(update: Update, context: CallbackContext) -> None:
     LISTED_USERS.append(chat_id)
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> master
 def sendmessage(chat_id):
     message = "Hello"
     url = "{telegram_url}/sendMessage".format(telegram_url=TELEGRAM_URL)
