@@ -4,4 +4,7 @@ flask-cors
 requests~=2.31.0
 psycopg2~=2.9.9
 telegram
+<<<<<<< HEAD
 redis
+=======
+>>>>>>> ae63fb2ae3bcd61aceda60852b877dd0ffdec080
