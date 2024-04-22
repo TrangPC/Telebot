@@ -40,12 +40,12 @@ def get_user(data):
             return user
 
 
-def get_chat(response):
-    if 'message' in response:
-        if 'entities' not in response['message']:
-            message = response['message']['text']
-            createdat = response['message']['date']
-            senderid = response['message']['chat']['id']
+def get_chat(data):
+    if 'message' in data:
+        if 'entities' not in data['message']:
+            message = data['message']['text']
+            createdat = data['message']['date']
+            senderid = data['message']['chat']['id']
             date = datetime.fromtimestamp(createdat).astimezone()
             payload = {
                 'senderid': senderid,
@@ -77,6 +77,7 @@ def get_chatgpt_response(input_text):
     return response.json()
     # return "Heelo"
 
+
 def message_handler(user, history_chat):
     print("Here")
     response = get_chatgpt_response(history_chat['message'])
@@ -84,21 +85,20 @@ def message_handler(user, history_chat):
 
     chat_id = history_chat['senderid']
 
-    msg = response
     createdat = datetime.utcnow()
     senderid = chat_id
     date = datetime.utcfromtimestamp(createdat.timestamp()).astimezone()
-    chat = {   # bot tra loi tin nhan
+    chat = {  # bot tra loi tin nhan
         'senderid': 7003110173,
         'message': response,
         'createdat': date
     }
     payload = {
         "chat_id": senderid,
-        "text": msg
+        "text": response
     }
     try:
-        send_msg = Thread(target=send_message, args=(url, payload, ))
+        send_msg = Thread(target=send_message, args=(url, payload,))
         send_msg.daemon = True
         send_msg.start()
         save_msg = Thread(target=save_message, args=(user, history_chat, chat,))
@@ -117,9 +117,9 @@ def save_message(user, history_chat, chat):
         queue_user.put(user)
         queue_chat.put(history_chat)
         queue_chat.put(chat)
-        if queue_user.qsize()>=5:
+        if queue_user.qsize() >= 5:
             db.addUser(queue_user)
-        if queue_chat.qsize()>=10:
+        if queue_chat.qsize() >= 10:
             db.addChatHistory(queue_chat)
     except Exception as e:
         print(e)

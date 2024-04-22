@@ -14,12 +14,10 @@ bot = telegram.Bot(token=TOKEN)
 
 @app.route("/", methods=["POST", "GET"])
 def index():
-    print('Here')
     if request.method == "POST":
         data = request.get_json()
         user = get_user(data)
         history_chat = get_chat(data)
-        print("Here")
         message_handler(user, history_chat)
 
     result = ApiResult(message="IDG-00000000", res_object=[], errors=[])
