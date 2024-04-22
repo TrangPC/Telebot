@@ -26,12 +26,12 @@ def handler_update(update):
     return message
 
 
-def add_user(response):
-    if 'message' in response:
-        if 'entities' not in response['message']:
-            psid = response['message']['from']['id']
-            firstname = response['message']['from']['first_name']
-            lastname = response['message']['from']['last_name']
+def get_user(data):
+    if 'message' in data:
+        if 'entities' not in data['message']:
+            psid = data['message']['from']['id']
+            firstname = data['message']['from']['first_name']
+            lastname = data['message']['from']['last_name']
             user = {
                 'psid': psid,
                 'firstname': firstname,
@@ -40,7 +40,7 @@ def add_user(response):
             return user
 
 
-def add_to_history_chat(response):
+def get_chat(response):
     if 'message' in response:
         if 'entities' not in response['message']:
             message = response['message']['text']
@@ -57,10 +57,28 @@ def add_to_history_chat(response):
 
 
 def get_chatgpt_response(input_text):
-    return "You send: " + input_text
+    url = "https://ai-api-textgen.p.rapidapi.com/completions"
 
+    payload = {
+        "init_character": "you like rap music",
+        "user_name": "Kile",
+        "character_name": "Sahra",
+        "text": input_text
+    }
+    headers = {
+        "content-type": "application/json",
+        "X-RapidAPI-Key": "8648c6de19mshfd237d6e1f21f9ep1c64cejsna58e6c5942c5",
+        "X-RapidAPI-Host": "ai-api-textgen.p.rapidapi.com"
+    }
+
+    response = requests.post(url, json=payload, headers=headers)
+
+    print(response.json())
+    return response.json()
+    # return "Heelo"
 
 def message_handler(user, history_chat):
+    print("Here")
     response = get_chatgpt_response(history_chat['message'])
     url = "{telegram_url}/sendMessage".format(telegram_url=TELEGRAM_URL)
 

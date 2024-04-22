@@ -4,7 +4,7 @@ import requests
 import telegram
 from src.api_dto.response import ApiResult
 from src.config import TOKEN, TELEGRAM_URL, WEBHOOK_URL
-from src.bot.telegram_handler import message_handler, add_to_history_chat, add_user
+from src.bot.telegram_handler import message_handler, get_chat, get_user
 
 app = flask.Blueprint("telegram_bot_api", __name__)
 
@@ -14,18 +14,16 @@ bot = telegram.Bot(token=TOKEN)
 
 @app.route("/", methods=["POST", "GET"])
 def index():
+    print('Here')
     if request.method == "POST":
-        response = request.get_json()
-        user = add_user(response)
-        history_chat = add_to_history_chat(response)
+        data = request.get_json()
+        user = get_user(data)
+        history_chat = get_chat(data)
+        print("Here")
         message_handler(user, history_chat)
 
     result = ApiResult(message="IDG-00000000", res_object=[], errors=[])
     return result.to_response()
-
-
-# def send_message(payload):
-#     return send_message_handler(payload)
 
 
 @app.route("/setwebhook/")

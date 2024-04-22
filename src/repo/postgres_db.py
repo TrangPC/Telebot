@@ -48,8 +48,6 @@ class Database:
             while not chatqueue.empty():
                 chat = chatqueue.get()
                 query = "INSERT INTO chathistory(senderid, message, createdat) VALUES (%s, %s, %s)"
-                # date = datetime.datetime.fromtimestamp(chat['createdat'])
-
                 cur.execute(query, (chat['senderid'], chat['message'], chat['createdat']))
                 conn.commit()
                 chatqueue.task_done()
