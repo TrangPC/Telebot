@@ -18,5 +18,5 @@ pip install -r requirements.txt
 
 #### Quick Test 
 ```commandline
-python bot.py
+python app.py
 ```
