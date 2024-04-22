@@ -3,17 +3,12 @@ import requests
 from telegram import Update
 from src.repo.postgres_db import Database
 from src.config import TELEGRAM_URL
-<<<<<<< HEAD
 from threading import Thread
 import queue
 
 db = Database()
 queue_chat = queue.Queue()
 queue_user = queue.Queue()
-=======
-
-db = Database()
->>>>>>> ae63fb2ae3bcd61aceda60852b877dd0ffdec080
 
 
 def start(update: Update) -> None:
@@ -22,7 +17,6 @@ def start(update: Update) -> None:
 
 def handler_update(update):
     message = update.get('message')
-<<<<<<< HEAD
     # if message:
     #     if not message['from']['is_bot']:
     #         formdata = {
@@ -44,17 +38,6 @@ def add_user(response):
                 'lastname': lastname
             }
             return user
-=======
-    if message:
-        if not message['from']['is_bot']:
-            formdata = {
-                'psid': message['from']['id'],
-                'firstname': message['from']['first_name'],
-                'lastname': message['from']['last_name']}
-            db.addUser(formdata)
-        # 'username': message['from']['username'],
-        # 'is_bot': message['from']['is_bot']}
->>>>>>> ae63fb2ae3bcd61aceda60852b877dd0ffdec080
 
 
 def add_to_history_chat(response):
@@ -62,7 +45,6 @@ def add_to_history_chat(response):
         if 'entities' not in response['message']:
             message = response['message']['text']
             createdat = response['message']['date']
-<<<<<<< HEAD
             senderid = response['message']['chat']['id']
             date = datetime.fromtimestamp(createdat).astimezone()
             payload = {
@@ -71,25 +53,10 @@ def add_to_history_chat(response):
                 'createdat': date
             }
             # queue_chat.put(payload)
-=======
-            # is_bot = response['message']['from']['is_bot']
-            # if is_bot:
-            #     senderid = response['message']['from']['id']
-            # else:
-            senderid = response['message']['chat']['id']
-
-            db.addChatHistory(senderid, message, createdat)
-            payload = {
-                'senderid': senderid,
-                'message': message,
-                'createdat': createdat
-            }
->>>>>>> ae63fb2ae3bcd61aceda60852b877dd0ffdec080
             return payload
 
 
 def get_chatgpt_response(input_text):
-<<<<<<< HEAD
     return "You send: " + input_text
 
 
@@ -138,41 +105,3 @@ def save_message(user, history_chat, chat):
             db.addChatHistory(queue_chat)
     except Exception as e:
         print(e)
-=======
-    return input_text
-
-
-def send_message_handler(payload):
-    response = get_chatgpt_response(payload['message'])
-    print('response')
-    url = "{telegram_url}/sendMessage".format(telegram_url=TELEGRAM_URL)
-    print(url)
-    chat_id = payload['senderid']
-    # username = "bot"
-    message = response
-    print(chat_id, message)
-    # resp = requests.get(url, params=newpayload)
-    # print(resp)
-    # bot.send_message(chat_id=chat_id, text=message)
-    # if resp:
-    #     print('why s more ')
-    createdat = datetime.utcnow()
-    senderid = chat_id
-    result = db.addChatHistory(senderid, message, createdat)
-    print('btd')
-    newpayload = {
-        "chat_id": chat_id,
-        "text": message
-    }
-    # try:
-    #     requests.get(url=url, params=newpayload)
-    #     status = requests.get(url=url, params= newpayload)
-    # except Exception as e:
-    #     print({str(e)})
-    # print(status)
-    try:
-        requests.post(url=url, data=newpayload)
-    except Exception as e:
-        print("Error:", str(e))
-    return newpayload
->>>>>>> ae63fb2ae3bcd61aceda60852b877dd0ffdec080
