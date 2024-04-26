@@ -1,9 +1,10 @@
+import logging
 from datetime import datetime
 import requests
 from telegram import Update
 from src.repo.postgres_db import Database
 from src.redis.cache import CacheRedis
-from src.config import TELEGRAM_URL
+from src.config import TELEGRAM_URL, BLACKLIST_FILE
 from threading import Thread
 import queue
 
@@ -11,6 +12,8 @@ db = Database()
 cache = CacheRedis()
 queue_chat = queue.Queue()
 queue_user = queue.Queue()
+
+BLACKLIST = None
 
 
 def start(update: Update) -> None:
@@ -58,6 +61,29 @@ def get_chat(data):
             return payload
 
 
+def load_blacklist():
+    global BLACKLIST
+    if not BLACKLIST:
+        with open(BLACKLIST_FILE, "r") as file:
+            BLACKLIST = [line.strip() for line in file]
+            # print(BLACKLIST)
+
+
+def checkMessage(message):
+    global BLACKLIST
+    if BLACKLIST is None:
+        load_blacklist()
+        # print(BLACKLIST)
+    else:
+        # print(message)
+        # print(BLACKLIST)
+        for word in message.split():
+            if word in BLACKLIST:
+        # if '5hit' in BLACKLIST:
+                return True
+        return False
+
+
 def get_chatgpt_response(input_text):
     url = "https://ai-api-textgen.p.rapidapi.com/completions"
 
@@ -74,19 +100,26 @@ def get_chatgpt_response(input_text):
     }
 
     response = requests.post(url, json=payload, headers=headers)
-    print(response.json())
+    # print(response.json())
     return response.json()
 
 
 # redis cache
 def get_response(message):
-    response = cache.get_response_from_cache(message)
-    if response:
-        print(response)
-        return response
+    check_blackword = checkMessage(message)
+    print(check_blackword)
+    if not check_blackword:
+        response = cache.get_response_from_cache(message)
+        if response:
+            # print(response)
+            return response
+        else:
+            response = get_chatgpt_response(message)
+            cache.save_to_cache(message, response)
+            return response
     else:
-        response = get_chatgpt_response(message)
-        cache.save_to_cache(message, response)
+        logging.getLogger().info('[ERROR] Message contains sensitive word')
+        response = "Your message contains sensitive word"
         return response
 
 
