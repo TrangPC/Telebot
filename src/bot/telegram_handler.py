@@ -2,11 +2,13 @@ from datetime import datetime
 import requests
 from telegram import Update
 from src.repo.postgres_db import Database
+from src.redis.cache import CacheRedis
 from src.config import TELEGRAM_URL
 from threading import Thread
 import queue
 
 db = Database()
+cache = CacheRedis()
 queue_chat = queue.Queue()
 queue_user = queue.Queue()
 
@@ -60,9 +62,9 @@ def get_chatgpt_response(input_text):
     url = "https://ai-api-textgen.p.rapidapi.com/completions"
 
     payload = {
-        "init_character": "you like rap music",
-        "user_name": "Kile",
-        "character_name": "Sahra",
+        "init_character": "you are an animal expert",
+        "user_name": "jack",
+        "character_name": "jack hanna",
         "text": input_text
     }
     headers = {
@@ -72,15 +74,24 @@ def get_chatgpt_response(input_text):
     }
 
     response = requests.post(url, json=payload, headers=headers)
-
     print(response.json())
     return response.json()
-    # return "Heelo"
+
+
+# redis cache
+def get_response(message):
+    response = cache.get_response_from_cache(message)
+    if response:
+        print(response)
+        return response
+    else:
+        response = get_chatgpt_response(message)
+        cache.save_to_cache(message, response)
+        return response
 
 
 def message_handler(user, history_chat):
-    print("Here")
-    response = get_chatgpt_response(history_chat['message'])
+    response = get_response(history_chat['message'])
     url = "{telegram_url}/sendMessage".format(telegram_url=TELEGRAM_URL)
 
     chat_id = history_chat['senderid']
@@ -117,7 +128,7 @@ def save_message(user, history_chat, chat):
         queue_user.put(user)
         queue_chat.put(history_chat)
         queue_chat.put(chat)
-        if queue_user.qsize() >= 5:
+        if queue_user.qsize() >= 1:
             db.addUser(queue_user)
         if queue_chat.qsize() >= 10:
             db.addChatHistory(queue_chat)
