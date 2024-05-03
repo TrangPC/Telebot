@@ -6,14 +6,17 @@ from src.repo.postgres_db import Database
 from src.redis.cache import CacheRedis
 from src.config import TELEGRAM_URL, BLACKLIST_FILE
 from threading import Thread
-import queue
+from multiprocessing import Process, Queue, Lock
+# import queue
 
 db = Database()
 cache = CacheRedis()
-queue_chat = queue.Queue()
-queue_user = queue.Queue()
-
+# queue_chat = queue.Queue()
+# queue_user = queue.Queue()
+queue_chat = Queue()
+queue_user = Queue()
 BLACKLIST = None
+lock = Lock()
 
 
 def start(update: Update) -> None:
@@ -33,7 +36,7 @@ def handler_update(update):
 
 def get_user(data):
     if 'message' in data:
-        if 'entities' not in data['message']:
+        if 'from' in data['message']:
             psid = data['message']['from']['id']
             firstname = data['message']['from']['first_name']
             lastname = data['message']['from']['last_name']
@@ -46,19 +49,20 @@ def get_user(data):
 
 
 def get_chat(data):
+
     if 'message' in data:
-        if 'entities' not in data['message']:
-            message = data['message']['text']
-            createdat = data['message']['date']
-            senderid = data['message']['chat']['id']
-            date = datetime.fromtimestamp(createdat).astimezone()
-            payload = {
-                'senderid': senderid,
-                'message': message,
-                'createdat': date
-            }
-            # queue_chat.put(payload)
-            return payload
+    # if 'chat' in data['message']:
+        message = data['message']['text']
+        createdat = data['message']['date']
+        senderid = data['message']['chat']['id']
+        date = datetime.fromtimestamp(createdat).astimezone()
+        payload = {
+            'senderid': senderid,
+            'message': message,
+            'createdat': date
+        }
+        # queue_chat.put(payload)
+        return payload
 
 
 def load_blacklist():
@@ -107,7 +111,7 @@ def get_chatgpt_response(input_text):
 # redis cache
 def get_response(message):
     check_blackword = checkMessage(message)
-    print(check_blackword)
+    # print(check_blackword)
     if not check_blackword:
         response = cache.get_response_from_cache(message)
         if response:
@@ -142,11 +146,15 @@ def message_handler(user, history_chat):
         "text": response
     }
     try:
-        send_msg = Thread(target=send_message, args=(url, payload,))
-        send_msg.daemon = True
+        # send_msg = Thread(target=send_message, args=(url, payload,))
+        # send_msg.daemon = True
+        # send_msg.start()
+        send_msg = Process(target=send_message, args=(url, payload,))
         send_msg.start()
-        save_msg = Thread(target=save_message, args=(user, history_chat, chat,))
+        save_msg = Process(target=save_message, args=(user, history_chat, chat, queue_user, queue_chat))
         save_msg.start()
+        # send_msg.join()
+        save_msg.join()
     except Exception as e:
         print("Error:", str(e))
     return payload
@@ -156,14 +164,15 @@ def send_message(url, payload):
     requests.post(url=url, data=payload)
 
 
-def save_message(user, history_chat, chat):
+def save_message(user, history_chat, chat, queue_user, queue_chat):
     try:
         queue_user.put(user)
         queue_chat.put(history_chat)
         queue_chat.put(chat)
         if queue_user.qsize() >= 1:
             db.addUser(queue_user)
-        if queue_chat.qsize() >= 10:
+        if queue_chat.qsize() >= 6:
             db.addChatHistory(queue_chat)
+
     except Exception as e:
         print(e)

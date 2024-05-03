@@ -2,6 +2,7 @@ import psycopg2
 import logging
 from src.config import db_config
 import datetime
+
 logging.basicConfig(filename="error.log", level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
@@ -28,18 +29,12 @@ class Database:
         try:
 
             query = 'SELECT EXISTS(SELECT 1 FROM users WHERE psid = %s)'
-            cur.execute(query, (psid, ))
+            cur.execute(query, (psid,))
             isexist = cur.fetchone()[0]
             conn.commit()
             return isexist
         except Exception as e:
             print(e)
-        # if not isexist:
-        #     return True
-        # else:
-        #     return False
-
-    # thêm lịch sử chat vào bảng chat history:
 
     def addChatHistory(self, chatqueue):
         conn = self.connect()
@@ -50,8 +45,8 @@ class Database:
                 query = "INSERT INTO chathistory(senderid, message, createdat) VALUES (%s, %s, %s)"
                 cur.execute(query, (chat['senderid'], chat['message'], chat['createdat']))
                 conn.commit()
-                chatqueue.task_done()
-            chatqueue.join()
+                # chatqueue.task_done()
+            # chatqueue.join()
         except Exception as e:
             print(e)
             logging.getLogger().info(f'[ERROR] Read queue fail: {str(e)}')
@@ -73,12 +68,10 @@ class Database:
                     conn.commit()
                 else:
                     logging.getLogger().info(f'[ERROR] User is existed!')
-                userqueue.task_done()
-            userqueue.join()
+                # userqueue.task_done()
+            # userqueue.join()
         except Exception as e:
             logging.getLogger().info(f'[ERROR] Insert into users fail str{e}')
         finally:
             cur.close()
             conn.close()
-
-
