@@ -7,6 +7,7 @@ from src.redis.cache import CacheRedis
 from src.config import TELEGRAM_URL, BLACKLIST_FILE
 from threading import Thread
 from multiprocessing import Process, Queue, Lock
+
 # import queue
 
 db = Database()
@@ -49,9 +50,8 @@ def get_user(data):
 
 
 def get_chat(data):
-
     if 'message' in data:
-    # if 'chat' in data['message']:
+        # if 'chat' in data['message']:
         message = data['message']['text']
         createdat = data['message']['date']
         senderid = data['message']['chat']['id']
@@ -83,7 +83,7 @@ def checkMessage(message):
         # print(BLACKLIST)
         for word in message.split():
             if word in BLACKLIST:
-        # if '5hit' in BLACKLIST:
+                # if '5hit' in BLACKLIST:
                 return True
         return False
 
@@ -104,7 +104,6 @@ def get_chatgpt_response(input_text):
     }
 
     response = requests.post(url, json=payload, headers=headers)
-    # print(response.json())
     return response.json()
 
 
@@ -115,10 +114,9 @@ def get_response(message):
     if not check_blackword:
         response = cache.get_response_from_cache(message)
         if response:
-            # print(response)
             return response
         else:
-            response = get_chatgpt_response(message)
+            response = get_chatgpt_response(message)  # .get('message')
             cache.save_to_cache(message, response)
             return response
     else:
@@ -128,7 +126,7 @@ def get_response(message):
 
 
 def message_handler(user, history_chat):
-    response = get_response(history_chat['message'])
+    response = get_response(history_chat.get('message'))
     url = "{telegram_url}/sendMessage".format(telegram_url=TELEGRAM_URL)
 
     chat_id = history_chat['senderid']

@@ -27,26 +27,25 @@ class Database:
         conn = self.connect()
         cur = conn.cursor()
         try:
-
             query = 'SELECT EXISTS(SELECT 1 FROM users WHERE psid = %s)'
             cur.execute(query, (psid,))
-            isexist = cur.fetchone()[0]
+            is_exist = cur.fetchone()[0]
             conn.commit()
-            return isexist
+            return is_exist
         except Exception as e:
             print(e)
 
-    def addChatHistory(self, chatqueue):
+    def addChatHistory(self, queue_chat):
         conn = self.connect()
         cur = conn.cursor()
         try:
-            while not chatqueue.empty():
-                chat = chatqueue.get()
+            while not queue_chat.empty():
+                chat = queue_chat.get()
                 query = "INSERT INTO chathistory(senderid, message, createdat) VALUES (%s, %s, %s)"
                 cur.execute(query, (chat['senderid'], chat['message'], chat['createdat']))
                 conn.commit()
-                # chatqueue.task_done()
-            # chatqueue.join()
+                # queue_chat.task_done()
+            # queue_chat.join()
         except Exception as e:
             print(e)
             logging.getLogger().info(f'[ERROR] Read queue fail: {str(e)}')
@@ -55,21 +54,21 @@ class Database:
             cur.close()
             conn.close()
 
-    def addUser(self, userqueue):
+    def addUser(self, queue_user):
         conn = self.connect()
         cur = conn.cursor()
         try:
-            while not userqueue.empty():
-                user = userqueue.get()
-                isexist = self.checkUserExist(str(user['psid']))
-                if not isexist:
+            while not queue_user.empty():
+                user = queue_user.get()
+                is_exist = self.checkUserExist(str(user['psid']))
+                if not is_exist:
                     query = "INSERT INTO users(psid, firstname, lastname) VALUES (%s, %s, %s)"
                     cur.execute(query, (user['psid'], user['firstname'], user['lastname']))
                     conn.commit()
                 else:
                     logging.getLogger().info(f'[ERROR] User is existed!')
-                # userqueue.task_done()
-            # userqueue.join()
+                # queue_user.task_done()
+            # queue_user.join()
         except Exception as e:
             logging.getLogger().info(f'[ERROR] Insert into users fail str{e}')
         finally:
