@@ -20,4 +20,3 @@ redis_config = {
 }
 
 BLACKLIST_FILE = 'blacklist-words-list.txt'
-

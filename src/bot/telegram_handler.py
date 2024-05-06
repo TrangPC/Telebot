@@ -7,7 +7,7 @@ from src.redis.cache import CacheRedis
 from src.config import TELEGRAM_URL, BLACKLIST_FILE
 from threading import Thread
 from multiprocessing import Process, Queue, Lock
-
+from character import characters
 # import queue
 
 db = Database()
@@ -18,7 +18,9 @@ queue_chat = Queue()
 queue_user = Queue()
 BLACKLIST = None
 lock = Lock()
-
+init_character = None
+user_name = None
+character_name = None
 
 def start(update: Update) -> None:
     update.message.reply_text("Hello user!")
@@ -90,11 +92,22 @@ def checkMessage(message):
 
 def get_chatgpt_response(input_text):
     url = "https://ai-api-textgen.p.rapidapi.com/completions"
-
+    if input_text.startswith("/"):
+        # print(input_text)
+        # command = input_text.split("/")
+        # name = command[0].strip()
+        # print(name)
+        global init_character, user_name, character_name
+        # if characters[name]:
+        #     init_character = characters[name]['init_character']
+        #     user_name = characters[name]['user_name']
+        #     character_name = characters[name]['character_name']
+        # input_text = 'Hello'
+        # print(input_text, user_name, character_name)
     payload = {
-        "init_character": "you are an animal expert",
-        "user_name": "jack",
-        "character_name": "jack hanna",
+        "init_character": init_character,
+        "user_name": user_name,
+        "character_name": character_name,
         "text": input_text
     }
     headers = {
@@ -102,27 +115,40 @@ def get_chatgpt_response(input_text):
         "X-RapidAPI-Key": "8648c6de19mshfd237d6e1f21f9ep1c64cejsna58e6c5942c5",
         "X-RapidAPI-Host": "ai-api-textgen.p.rapidapi.com"
     }
-
     response = requests.post(url, json=payload, headers=headers)
     return response.json()
 
 
 # redis cache
 def get_response(message):
-    check_blackword = checkMessage(message)
-    # print(check_blackword)
-    if not check_blackword:
-        response = cache.get_response_from_cache(message)
-        if response:
-            return response
-        else:
-            response = get_chatgpt_response(message)  # .get('message')
-            cache.save_to_cache(message, response)
+    if message.startswith('/'):
+        command = message.split('/')
+        name = command[1].strip()
+        # print(name)
+        global init_character, user_name, character_name
+        if characters[name]:
+            init_character = characters[name]['init_character']
+            user_name = characters[name]['user_name']
+            character_name = characters[name]['character_name']
+            message = 'Hello'
+            # print(init_character, user_name, character_name)
+            response = get_chatgpt_response(message)
             return response
     else:
-        logging.getLogger().info('[ERROR] Message contains sensitive word')
-        response = "Your message contains sensitive word"
-        return response
+        check_blackword = checkMessage(message)
+    # print(check_blackword)
+        if not check_blackword:
+            response = cache.get_response_from_cache(message)
+            if response:
+                return response
+            else:
+                response = get_chatgpt_response(message)  # .get('message')
+                cache.save_to_cache(message, response)
+                return response
+        else:
+            logging.getLogger().info('[ERROR] Message contains sensitive word')
+            response = "Your message contains sensitive word"
+            return response
 
 
 def message_handler(user, history_chat):
@@ -174,3 +200,16 @@ def save_message(user, history_chat, chat, queue_user, queue_chat):
 
     except Exception as e:
         print(e)
+
+
+# xử lý command
+# def parse_input(text):
+#     if text.startswith("/"):
+#         command = text.split(" ", 1)
+#         name = command[0]
+#         return characters.get(name)
+#     else:
+#         return text
+
+
+

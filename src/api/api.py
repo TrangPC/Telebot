@@ -16,6 +16,7 @@ bot = telegram.Bot(token=TOKEN)
 def index():
     if request.method == "POST":
         data = request.get_json()
+        print(data)
         user = get_user(data)
         history_chat = get_chat(data)
         message_handler(user, history_chat)
