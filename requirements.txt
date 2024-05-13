@@ -6,3 +6,4 @@ psycopg2~=2.9.9
 telegram
 redis
 minio
+sqlalchemy

@@ -11,7 +11,7 @@ db_config = {
 # TOKEN = "7003110173:AAFaiT4IY0vIMBOPaAZWF4dCu9pk0HH4uZM" # bot chính
 TOKEN = "7026401713:AAF44CprQrRATCGVHjycxMfeB75KF02_5lE"  # bot phụ
 TELEGRAM_URL = "https://api.telegram.org/bot{}".format(TOKEN)
-WEBHOOK_URL = "0c78-222-252-23-232.ngrok-free.app"
+WEBHOOK_URL = "0461-222-252-23-232.ngrok-free.app"
 
 redis_config = {
     'host': 'localhost',

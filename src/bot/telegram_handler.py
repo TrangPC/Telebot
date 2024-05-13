@@ -2,12 +2,14 @@ import logging
 from datetime import datetime
 import requests
 from telegram import Update
-from src.repo.postgres_db import Database
+# from src.repo.postgres_db import Database
+from src.repo.orm import Database
 from src.redis.cache import CacheRedis
 from src.config import TELEGRAM_URL, BLACKLIST_FILE
 from threading import Thread
 from multiprocessing import Process, Queue, Lock
 from character import characters
+
 # import queue
 
 db = Database()
@@ -21,6 +23,7 @@ lock = Lock()
 init_character = None
 user_name = None
 character_name = None
+
 
 def start(update: Update) -> None:
     update.message.reply_text("Hello user!")
@@ -136,7 +139,7 @@ def get_response(message):
             return response
     else:
         check_blackword = checkMessage(message)
-    # print(check_blackword)
+        # print(check_blackword)
         if not check_blackword:
             response = cache.get_response_from_cache(message)
             if response:
@@ -201,7 +204,6 @@ def save_message(user, history_chat, chat, queue_user, queue_chat):
     except Exception as e:
         print(e)
 
-
 # xử lý command
 # def parse_input(text):
 #     if text.startswith("/"):
@@ -210,6 +212,3 @@ def save_message(user, history_chat, chat, queue_user, queue_chat):
 #         return characters.get(name)
 #     else:
 #         return text
-
-
-
