@@ -3,7 +3,8 @@ from datetime import datetime
 import requests
 from telegram import Update
 # from src.repo.postgres_db import Database
-from src.repo.orm import Database
+# from src.repo.orm import Database
+from src.repo.dao import Database, ChatHistoryDAO, UserDAO
 from src.redis.cache import CacheRedis
 from src.config import TELEGRAM_URL, BLACKLIST_FILE
 from threading import Thread
@@ -23,7 +24,8 @@ lock = Lock()
 init_character = None
 user_name = None
 character_name = None
-
+users = UserDAO(db)
+chathistories = ChatHistoryDAO(db)
 
 def start(update: Update) -> None:
     update.message.reply_text("Hello user!")
@@ -197,18 +199,11 @@ def save_message(user, history_chat, chat, queue_user, queue_chat):
         queue_chat.put(history_chat)
         queue_chat.put(chat)
         if queue_user.qsize() >= 1:
-            db.addUser(queue_user)
+            # db.addUser(queue_user)
+            users.addUser(queue_user)
         if queue_chat.qsize() >= 6:
-            db.addChatHistory(queue_chat)
-
+            # db.addChatHistory(queue_chat)
+            chathistories.addChatHistory(queue_chat)
     except Exception as e:
         print(e)
 
-# xử lý command
-# def parse_input(text):
-#     if text.startswith("/"):
-#         command = text.split(" ", 1)
-#         name = command[0]
-#         return characters.get(name)
-#     else:
-#         return text

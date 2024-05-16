@@ -1,28 +1,29 @@
 import logging
-from sqlalchemy import create_engine, Column, Integer, String, DateTime
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from src.config import db_config
+from models import UserORM, ChatHistoryORM
 import datetime
 
 logging.basicConfig(filename="error.log", level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 Base = declarative_base()
 
 
-class UserORM(Base):
-    __tablename__ = 'users'
-    id = Column(Integer, primary_key=True)
-    psid = Column(String(50), unique=True)
-    firstname = Column(String(50))
-    lastname = Column(String(50))
-
-
-class ChatHistoryORM(Base):
-    __tablename__ = 'chathistory'
-    id = Column(Integer, primary_key=True)
-    senderid = Column(String(50))
-    message = Column(String(1000))
-    createdat = Column(DateTime, default=datetime.datetime.utcnow)
+# class UserORM(Base):
+#     __tablename__ = 'users'
+#     id = Column(Integer, primary_key=True)
+#     psid = Column(String(50), unique=True)
+#     firstname = Column(String(50))
+#     lastname = Column(String(50))
+#
+#
+# class ChatHistoryORM(Base):
+#     __tablename__ = 'chathistory'
+#     id = Column(Integer, primary_key=True)
+#     senderid = Column(String(50))
+#     message = Column(String(1000))
+#     createdat = Column(DateTime, default=datetime.datetime.utcnow)
 
 
 class Database:
