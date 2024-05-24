@@ -17,6 +17,8 @@ class ApiResult:
     def get_http_status_code(self, message: str) -> int:
         if message == "IDG-00000000":
             status = 200
+        elif message == "IDG-00000200":
+            status = 200
         elif message == "IDG-00000400":
             status = 400
         elif message == "IDG-00000404":

@@ -1,7 +1,6 @@
 import psycopg2
 import logging
 from src.config import db_config
-import datetime
 
 logging.basicConfig(filename="error.log", level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -16,7 +15,10 @@ class Database:
 
     def connect(self):
         try:
-            conn = psycopg2.connect(user=self.user, password=self.password, host=self.host, port=self.port,
+            conn = psycopg2.connect(user=self.user,
+                                    password=self.password,
+                                    host=self.host,
+                                    port=self.port,
                                     database=self.database)
             return conn
         except Exception as e:

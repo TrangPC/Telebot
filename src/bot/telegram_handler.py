@@ -72,7 +72,6 @@ def load_blacklist():
     if not BLACKLIST:
         with open(BLACKLIST_FILE, "r") as file:
             BLACKLIST = [line.strip() for line in file]
-            # print(BLACKLIST)
 
 
 def checkMessage(message):
@@ -157,7 +156,8 @@ def message_handler(user, history_chat):
         # send_msg.start()
         send_msg = Process(target=send_message, args=(url, payload,))
         send_msg.start()
-        save_msg = Process(target=save_message, args=(user, history_chat, chat, queue_user, queue_chat))
+        save_msg = Process(target=save_message, args=(user, history_chat, chat,
+                                                      queue_user, queue_chat))
         save_msg.start()
         # send_msg.join()
         save_msg.join()
