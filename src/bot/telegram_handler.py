@@ -7,7 +7,7 @@ from telegram import Update
 from src.repo.dao import Database, ChatHistoryDAO, UserDAO
 from src.redis.cache import CacheRedis
 from src.config import TELEGRAM_URL, BLACKLIST_FILE
-from threading import Thread
+# from threading import Thread
 from multiprocessing import Process, Queue, Lock
 from character import characters
 
@@ -25,7 +25,8 @@ init_character = None
 user_name = None
 character_name = None
 users = UserDAO(db)
-chathistories = ChatHistoryDAO(db)
+chat_histories = ChatHistoryDAO(db)
+
 
 def start(update: Update) -> None:
     update.message.reply_text("Hello user!")
@@ -33,12 +34,6 @@ def start(update: Update) -> None:
 
 def handler_update(update):
     message = update.get('message')
-    # if message:
-    #     if not message['from']['is_bot']:
-    #         formdata = {
-    #             'psid': message['from']['id'],
-    #             'firstname': message['from']['first_name'],
-    #             'lastname': message['from']['last_name']}
     return message
 
 
@@ -84,36 +79,22 @@ def checkMessage(message):
     global BLACKLIST
     if BLACKLIST is None:
         load_blacklist()
-        # print(BLACKLIST)
     else:
-        # print(message)
-        # print(BLACKLIST)
         for word in message.split():
             if word in BLACKLIST:
-                # if '5hit' in BLACKLIST:
                 return True
         return False
 
 
-def get_chatgpt_response(input_text):
+def get_chatgpt_response(message):
     url = "https://ai-api-textgen.p.rapidapi.com/completions"
-    if input_text.startswith("/"):
-        # print(input_text)
-        # command = input_text.split("/")
-        # name = command[0].strip()
-        # print(name)
-        global init_character, user_name, character_name
-        # if characters[name]:
-        #     init_character = characters[name]['init_character']
-        #     user_name = characters[name]['user_name']
-        #     character_name = characters[name]['character_name']
-        # input_text = 'Hello'
-        # print(input_text, user_name, character_name)
+    # if message.startswith("/"):
+    global init_character, user_name, character_name
     payload = {
         "init_character": init_character,
         "user_name": user_name,
         "character_name": character_name,
-        "text": input_text
+        "text": message
     }
     headers = {
         "content-type": "application/json",
@@ -124,25 +105,21 @@ def get_chatgpt_response(input_text):
     return response.json()
 
 
-# redis cache
 def get_response(message):
+    global init_character, user_name, character_name
     if message.startswith('/'):
         command = message.split('/')
         name = command[1].strip()
-        # print(name)
-        global init_character, user_name, character_name
         if characters[name]:
             init_character = characters[name]['init_character']
             user_name = characters[name]['user_name']
             character_name = characters[name]['character_name']
             message = 'Hello'
-            # print(init_character, user_name, character_name)
             response = get_chatgpt_response(message)
             return response
     else:
-        check_blackword = checkMessage(message)
-        # print(check_blackword)
-        if not check_blackword:
+        check_blacklist_word = checkMessage(message)
+        if not check_blacklist_word:
             response = cache.get_response_from_cache(message)
             if response:
                 return response
@@ -193,17 +170,16 @@ def send_message(url, payload):
     requests.post(url=url, data=payload)
 
 
-def save_message(user, history_chat, chat, queue_user, queue_chat):
+def save_message(user, history_chat, chat, user_queue, chat_queue):
     try:
-        queue_user.put(user)
-        queue_chat.put(history_chat)
-        queue_chat.put(chat)
-        if queue_user.qsize() >= 1:
+        user_queue.put(user)
+        chat_queue.put(history_chat)
+        chat_queue.put(chat)
+        if user_queue.qsize() >= 1:
             # db.addUser(queue_user)
-            users.addUser(queue_user)
-        if queue_chat.qsize() >= 6:
+            users.addUser(user_queue)
+        if chat_queue.qsize() >= 6:
             # db.addChatHistory(queue_chat)
-            chathistories.addChatHistory(queue_chat)
+            chat_histories.addChatHistory(chat_queue)
     except Exception as e:
         print(e)
-
