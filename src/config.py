@@ -4,6 +4,7 @@ db_config = {
     "db_host": "localhost",
     "db_port": 5432,
     "db_database": "Telebot"
+    
 }
 
 # TOKEN = "7003110173:AAFaiT4IY0vIMBOPaAZWF4dCu9pk0HH4uZM" # bot chính
